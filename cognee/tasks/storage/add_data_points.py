@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Collection, Dict, List, Optional
 
 from cognee.modules.pipelines.tasks.task import task_summary
 from cognee.infrastructure.engine import DataPoint
@@ -19,6 +19,7 @@ from cognee.modules.graph.utils import (
     deduplicate_nodes_and_edges,
     ensure_default_edge_properties,
     get_graph_from_model,
+    resolve_temporal_contradictions,
 )
 from .index_data_points import index_data_points
 from .index_graph_edges import index_graph_edges
@@ -41,6 +42,7 @@ async def add_data_points(
     custom_edges: Optional[List] = None,
     embed_triplets: bool = False,
     ctx: Optional["PipelineContext"] = None,
+    functional_relationships: Optional[Collection[str]] = None,
 ) -> List[DataPoint]:
     """
     Add a batch of data points to the graph database by extracting nodes and edges,
@@ -51,6 +53,11 @@ async def add_data_points(
         custom_edges: Custom edges between datapoints.
         embed_triplets: If True, creates and indexes triplet embeddings.
         ctx: Pipeline runtime context (user, dataset, data_item).
+        functional_relationships: Relationship names that hold a single target
+            per source. When given, conflicting assertions of these in the batch
+            are resolved by recency (see resolve_temporal_contradictions); the
+            older ones are tagged as superseded. Off by default — most cognee
+            relationships are legitimately many-valued.
     """
     user = ctx.user if ctx else None
     data_item = ctx.data_item if ctx else None
@@ -93,6 +100,19 @@ async def add_data_points(
         if isinstance(custom_edges, list) and custom_edges
         else None
     )
+
+    # Opt-in temporal contradiction resolution (issue #3631). When the caller
+    # names single-valued relationships, conflicting assertions in this batch
+    # are resolved by recency: the superseded edges are kept (history preserved)
+    # but tagged, rather than silently coexisting as duplicate current facts.
+    if functional_relationships:
+        edges, superseded_edges = resolve_temporal_contradictions(edges, functional_relationships)
+        if superseded_edges:
+            logger.info(
+                "Temporal resolution superseded %d edge(s) across %d relationship(s)",
+                len(superseded_edges),
+                len({edge[2] for edge in superseded_edges}),
+            )
 
     unified = await get_unified_engine()
     graph_engine = unified.graph
