@@ -71,7 +71,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Build-time version assertions: verify the engine and MCP are built from the
 # exact same source tree at the expected versions. Fails the build if either
-# version does not match.
+# version does not match. Uses the venv Python (not system Python) so that
+# importlib.metadata finds the installed packages.
+ENV PATH="/app/cognee-mcp/.venv/bin:$PATH"
 RUN python -c "import importlib.metadata; v=importlib.metadata.version('cognee'); assert v=='1.4.0', f'cognee version mismatch: got {v}, expected 1.4.0'" \
     && python -c "import importlib.metadata; v=importlib.metadata.version('cognee-mcp'); assert v=='0.5.4', f'cognee-mcp version mismatch: got {v}, expected 0.5.4'"
 
