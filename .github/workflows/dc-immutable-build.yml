@@ -228,12 +228,20 @@ jobs:
             sleep 2
           done
 
+      - name: Create test_migration_db and load Chinook test data
+        env:
+          PGPASSWORD: cognee
+        run: |
+          createdb -h 127.0.0.1 -U cognee test_migration_db
+          psql -h 127.0.0.1 -U cognee -d test_migration_db -f ./cognee/tests/test_data/Chinook_PostgreSql.sql
+
       - name: Run search DB tests (pgvector + postgres_graph)
         run: uv run pytest cognee/tests/test_search_db.py -v --log-level=INFO --timeout=600
 
       - name: Run relational DB migration tests
         env:
           GRAPH_DATABASE_PROVIDER: kuzu
+          DB_NAME: test_migration_db
         run: uv run python ./cognee/tests/test_relational_db_migration.py
 
       - name: Run integration tests (relational metadata, dataset CRUD, pool-disposal)
