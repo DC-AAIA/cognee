@@ -333,6 +333,7 @@ jobs:
         env:
           PIPAPI_PYTHON_LOCATION: ${{ github.workspace }}/cognee-mcp/.venv/bin/python
         run: |
+          uv pip install pip
           uv run --with pip-audit pip-audit --strict --progress-spinner off
         continue-on-error: false
 
