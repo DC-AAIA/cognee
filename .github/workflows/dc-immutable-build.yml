@@ -48,7 +48,7 @@ jobs:
 
       - name: Verify lockfile is up to date
         working-directory: cognee-mcp
-        run: uv lock --check --frozen
+        run: uv lock --check
 
       - name: Assert cognee resolved from local path at version 1.4.0
         working-directory: cognee-mcp
@@ -472,7 +472,10 @@ jobs:
 
       - name: Verify no secrets in workflow
         run: |
-          if grep -qiE '(sk-or-v1-|sk-[a-f0-9]{20,}|ghp_[a-zA-Z0-9]{36})' .github/workflows/dc-immutable-build.yml; then
+          # Use sk-or-v1-[a-f0-9]{40,} to match actual OpenRouter keys (40+ hex
+          # chars after prefix) without self-matching the regex pattern in this
+          # file (which is followed by |, not hex chars).
+          if grep -qiE '(sk-or-v1-[a-f0-9]{40,}|sk-[a-f0-9]{20,}|ghp_[a-zA-Z0-9]{36})' .github/workflows/dc-immutable-build.yml; then
             echo "FAIL: potential secret in workflow"
             exit 1
           fi
