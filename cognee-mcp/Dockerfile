@@ -82,8 +82,13 @@ FROM python:3.12-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3
 
 ARG GIT_COMMIT=unknown
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
+# Install security updates for OS packages, then install runtime deps.
+# apt-get upgrade addresses CVEs in the base image's OS packages (zlib,
+# sqlite, ncurses, perl, etc.) that are flagged by Trivy.
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+       libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

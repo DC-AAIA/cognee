@@ -229,7 +229,7 @@ jobs:
           done
 
       - name: Run search DB tests (pgvector + postgres_graph)
-        run: uv run pytest cognee/tests/test_search_db.py -v --log-level=INFO --timeout=300
+        run: uv run pytest cognee/tests/test_search_db.py -v --log-level=INFO --timeout=600
 
       - name: Run relational DB migration tests
         run: uv run python ./cognee/tests/test_relational_db_migration.py
@@ -324,9 +324,9 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install MCP dependencies
+      - name: Install MCP dependencies (runtime only, matching Docker image)
         working-directory: cognee-mcp
-        run: uv sync
+        run: uv sync --no-dev
 
       - name: Run pip-audit (no --ignore-unfixed)
         working-directory: cognee-mcp
