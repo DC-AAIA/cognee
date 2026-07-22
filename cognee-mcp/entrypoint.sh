@@ -53,7 +53,13 @@ echo "Transport mode: $TRANSPORT_MODE"
 if [ "$TRANSPORT_MODE" != "stdio" ]; then
     HTTP_PORT=${HTTP_PORT:-8000}
     echo "HTTP port: $HTTP_PORT"
-    ARGS+=("--host" "0.0.0.0" "--port" "$HTTP_PORT")
+    # DC immutable build: support configurable bind address via BIND_ADDRESS env.
+    # Default is 0.0.0.0 (IPv4 all interfaces). Railway sets BIND_ADDRESS=:: for
+    # IPv6 dual-stack (Railway internal DNS resolves to IPv6; binding to :: also
+    # accepts IPv4 connections on Linux).
+    BIND_ADDRESS=${BIND_ADDRESS:-0.0.0.0}
+    echo "Bind address: $BIND_ADDRESS"
+    ARGS+=("--host" "$BIND_ADDRESS" "--port" "$HTTP_PORT")
 fi
 
 echo "Starting Cognee MCP Server with transport mode: $TRANSPORT_MODE"

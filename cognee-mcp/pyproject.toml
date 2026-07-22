@@ -67,6 +67,15 @@ constraint-dependencies = [
 # Note: exclude newer packages that are less than 2 days old
 exclude-newer = "2 days"
 
+# DC immutable build: override the cognee dependency to resolve from the local
+# source tree (the repo root, which contains the cognee engine package at
+# version 1.4.0) instead of PyPI. This ensures the MCP server and the engine
+# are built from the exact same source tree at the v1.4.0 tag commit.
+# The dependency range in [project].dependencies is preserved; this override
+# only changes the *source* uv uses to satisfy that range.
+[tool.uv.sources]
+cognee = { path = "..", package = true }
+
 [project.scripts]
 cognee = "src:main"
 cognee-mcp = "src:main_mcp"
