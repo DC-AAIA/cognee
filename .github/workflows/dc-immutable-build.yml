@@ -232,12 +232,14 @@ jobs:
         run: uv run pytest cognee/tests/test_search_db.py -v --log-level=INFO --timeout=600
 
       - name: Run relational DB migration tests
+        env:
+          GRAPH_DATABASE_PROVIDER: kuzu
         run: uv run python ./cognee/tests/test_relational_db_migration.py
 
       - name: Run integration tests (relational metadata, dataset CRUD, pool-disposal)
         run: |
-          uv run pytest cognee/tests/integration/infrastructure/ -v --timeout=300 --durations=20 || true
-          uv run pytest cognee/tests/integration/test_delete_edge_cases.py -v --timeout=300 || true
+          uv run pytest cognee/tests/integration/infrastructure/ -v --durations=20 || true
+          uv run pytest cognee/tests/integration/test_delete_edge_cases.py -v || true
 
   # Gate 5: MCP container smoke
   container-build-smoke:
